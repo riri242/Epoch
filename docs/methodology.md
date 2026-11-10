@@ -38,6 +38,18 @@ period. PSI is a descriptive covariate-shift measure, not an established
 detection of concept drift. ADWIN detects changes in the observed error stream,
 which can indicate degradation but does not prove a cause.
 
+## Feature sensitivity analysis
+
+The `day` field may be shifted by source-data irregularities. To test the
+impact, `python scripts/run_sensitivity.py` performs a paired ablation: the
+full five-feature baseline is compared with four input features excluding `day`.
+All observations, ordering, random seeds, initial training fraction, batch
+size, model architecture and update policies are held fixed. Each scenario
+fits its scaler on its initial training partition only. The report provides
+accuracy, balanced accuracy, F1 (UP), and the difference in percentage points.
+This is a robustness check rather than proof that any specific timestamp is
+correct, or that `day` alone causes temporal drift.
+
 ## Outcome measures
 
 Primary: accuracy, balanced accuracy and F1 for the `UP` class, measured on the
