@@ -48,6 +48,7 @@ Download, test, and run:
 python scripts/download_data.py
 python -m pytest -q
 python scripts/run_experiment.py
+python scripts/audit_data.py
 ```
 
 A working internet connection is required only for the initial OpenML download.
@@ -65,19 +66,23 @@ Running the experiment creates these files under `results/`:
 | `feature_shift.png` | Feature-shift trends |
 | `research_summary.md` | Research question, measured results and limitations |
 
-Generated outputs are local by default. No accuracy claim is made until the
-experiment is run on the original benchmark.
+Generated outputs are local by default. The independent data audit writes
+`results/data_audit.json` and reports date reversals and suspected duplicate-day
+column matches without changing the input records. See [data quality notes](docs/data_quality.md).
+No accuracy claim is made until the experiment is run on the original benchmark.
 
 ## Repository layout
 
 ```text
 Epoch/
 ├── src/epoch_research/
+│   ├── audit.py          # Non-destructive source data quality checks
 │   ├── data.py           # Load and validate the ordered dataset
 │   ├── drift.py          # Feature-shift measurement
 │   ├── experiment.py     # Four adaptation strategies
 │   └── report.py         # Results and figures
 ├── scripts/
+│   ├── audit_data.py
 │   ├── download_data.py
 │   └── run_experiment.py
 ├── tests/                # Offline regression tests
