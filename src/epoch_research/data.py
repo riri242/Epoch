@@ -9,8 +9,9 @@ from sklearn.datasets import fetch_openml
 DATA_ID = 151
 TARGET = "class"
 # Current electricity prices are excluded to avoid target-related leakage.
-FEATURES = ("day", "period", "nswdemand", "vicdemand", "transfer")
-FEATURES_NO_DAY = tuple(feature for feature in FEATURES if feature != "day")
+FEATURES = ("period", "nswdemand", "vicdemand", "transfer")
+FEATURES_NO_DAY = FEATURES
+FEATURES_WITH_DAY = ("day",) + FEATURES
 EXCLUDED = ("nswprice", "vicprice")
 
 
@@ -70,8 +71,13 @@ def features_target(
 ) -> tuple[np.ndarray, np.ndarray]:
     validate_electricity(frame)
     selected = FEATURES if feature_names is None else tuple(feature_names)
-    if not selected or len(selected) != len(set(selected)) or not set(selected) <= set(FEATURES):
+    if not selected or len(selected) != len(set(selected)) or not set(selected) <= set(FEATURES_WITH_DAY):
         raise ValueError("Feature selection must contain unique supported features")
+    missing = set(selected) - set(frame.columns)
+    if missing:
+        raise ValueError(f"Missing selected feature columns: {sorted(missing)}")
     x = frame.loc[:, selected].to_numpy(dtype=float)
+    if not np.isfinite(x).all():
+        raise ValueError("Selected features must be finite")
     y = frame[TARGET].astype(str).str.upper().eq("UP").to_numpy(dtype=int)
     return x, y
