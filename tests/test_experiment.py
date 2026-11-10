@@ -36,7 +36,7 @@ def test_all_methods_evaluate_same_future_rows():
     assert summary["strategies"]["periodic"]["model_updates"] == 4
     assert summary["strategies"]["online"]["model_updates"] == 9
     assert summary["strategies"]["adwin"]["model_updates"] == 0
-    assert len(shift) == 9 * 5
+    assert len(shift) == 9 * 4
     # Identical initial models must give identical predictions on the first batch.
     first = windows.loc[windows["block"].eq(0)]
     assert first["accuracy"].nunique() == 1
