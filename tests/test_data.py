@@ -22,8 +22,9 @@ def example(n=200):
 
 def test_target_related_price_fields_excluded():
     assert "nswprice" not in FEATURES and "vicprice" not in FEATURES
+    assert "day" not in FEATURES
     x, y = features_target(example())
-    assert x.shape == (200, 5)
+    assert x.shape == (200, 4)
     assert set(y) == {0, 1}
 
 
