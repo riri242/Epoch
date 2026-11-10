@@ -31,8 +31,9 @@ Two **supplementary checks** (not competing primary experiments):
    update and cooldown intervals fixed in observed records. Different batch
    sizes also change label-feedback timing.
 
-See [methodology](docs/methodology.md), [data-quality audit](docs/data_quality.md)
-and the [day-feature check](docs/day_sensitivity_results.md).
+See the **[research report and measured findings](docs/research_report.md)**,
+[methodology](docs/methodology.md), [data-quality audit](docs/data_quality.md)
+and [day-feature check](docs/day_sensitivity_results.md).
 
 ## Reproduce on Windows PowerShell
 
