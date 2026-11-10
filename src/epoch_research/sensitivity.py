@@ -5,20 +5,27 @@ from pathlib import Path
 
 import pandas as pd
 
-from .data import FEATURES, FEATURES_NO_DAY
+from dataclasses import asdict
+
+from .data import FEATURES, FEATURES_WITH_DAY
 from .experiment import Settings, run
 
 STRATEGIES = ("static", "periodic", "online", "adwin")
 METRICS = ("accuracy", "balanced_accuracy", "f1_up")
 
 
-def compare_day_feature(frame: pd.DataFrame, settings: Settings = Settings(), detector_factory=None):
+def compare_day_feature(frame: pd.DataFrame, settings: Settings = Settings(), detector_factory=None, primary_run=None):
     baseline, base_windows, _ = run(
-        frame, settings, detector_factory=detector_factory, feature_names=FEATURES
+        frame, settings, detector_factory=detector_factory, feature_names=FEATURES_WITH_DAY
     )
-    without, windows, shifts = run(
-        frame, settings, detector_factory=detector_factory, feature_names=FEATURES_NO_DAY
-    )
+    if primary_run is None:
+        without, windows, shifts = run(
+            frame, settings, detector_factory=detector_factory, feature_names=FEATURES
+        )
+    else:
+        without, windows, shifts = primary_run
+        if without["features"] != list(FEATURES) or without["settings"] != asdict(settings):
+            raise ValueError("Provided primary run has incompatible features or settings")
 
     keys = ["strategy", "block", "start_row", "end_row", "count"]
     if not base_windows[keys].equals(windows[keys]):
@@ -42,8 +49,8 @@ def compare_day_feature(frame: pd.DataFrame, settings: Settings = Settings(), de
         "initial_training_rows": baseline["initial_training_rows"],
         "evaluated_rows": baseline["evaluated_rows"],
         "settings": baseline["settings"],
-        "with_day_features": list(FEATURES),
-        "without_day_features": list(FEATURES_NO_DAY),
+        "with_day_features": list(FEATURES_WITH_DAY),
+        "without_day_features": list(FEATURES),
         "comparison": comparisons,
         "raw_row_order_modified": False,
         "note": "Feature ablation does not repair source timestamps or establish causal drift.",
