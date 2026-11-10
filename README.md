@@ -1,6 +1,6 @@
 # Epoch
 
-**A small experimental study of temporal data shift and model adaptation.**
+**An experimental study of temporal data shift and model adaptation.**
 
 How much does a machine learning model's performance change as new data
 arrives, and can lightweight updates help? Epoch compares four training
