@@ -55,14 +55,20 @@ def metrics(y_true, y_pred):
     }
 
 
-def run(frame: pd.DataFrame, settings: Settings = Settings(), detector_factory=None):
+def run(
+    frame: pd.DataFrame,
+    settings: Settings = Settings(),
+    detector_factory=None,
+    feature_names: tuple[str, ...] | None = None,
+):
     """All four methods predict each block before observing that block's labels.
 
     The scaler is fitted on the warm-up period only and never refitted.
     Adaptation decisions and model updates occur *after* block scoring.
     """
     settings.check()
-    x, y = features_target(frame)
+    selected = FEATURES if feature_names is None else tuple(feature_names)
+    x, y = features_target(frame, selected)
     warmup = int(len(x) * settings.warmup_fraction)
     if warmup < 20 or len(x) - warmup < settings.batch_size:
         raise ValueError("Not enough observations for chronological evaluation")
@@ -100,7 +106,7 @@ def run(frame: pd.DataFrame, settings: Settings = Settings(), detector_factory=N
                 "strategy": name, "block": block_idx, "start_row": left,
                 "end_row": right, "count": right - left, **values,
             })
-        for col, feature in enumerate(FEATURES):
+        for col, feature in enumerate(selected):
             shifts.append({
                 "block": block_idx, "end_row": right, "feature": feature,
                 "psi": population_stability_index(x[:warmup, col], batch_x[:, col]),
@@ -143,7 +149,7 @@ def run(frame: pd.DataFrame, settings: Settings = Settings(), detector_factory=N
         "dataset_rows": len(x),
         "initial_training_rows": warmup,
         "evaluated_rows": len(truth),
-        "features": list(FEATURES),
+        "features": list(selected),
         "excluded_price_features": ["nswprice", "vicprice"],
         "settings": asdict(settings),
         "strategies": {
