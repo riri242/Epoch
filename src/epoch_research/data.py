@@ -10,6 +10,7 @@ DATA_ID = 151
 TARGET = "class"
 # Current electricity prices are excluded to avoid target-related leakage.
 FEATURES = ("day", "period", "nswdemand", "vicdemand", "transfer")
+FEATURES_NO_DAY = tuple(feature for feature in FEATURES if feature != "day")
 EXCLUDED = ("nswprice", "vicprice")
 
 
@@ -64,8 +65,13 @@ def load_electricity(path: str | Path = "data/electricity.csv") -> pd.DataFrame:
     return frame
 
 
-def features_target(frame: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+def features_target(
+    frame: pd.DataFrame, feature_names: tuple[str, ...] | None = None
+) -> tuple[np.ndarray, np.ndarray]:
     validate_electricity(frame)
-    x = frame.loc[:, FEATURES].to_numpy(dtype=float)
+    selected = FEATURES if feature_names is None else tuple(feature_names)
+    if not selected or len(selected) != len(set(selected)) or not set(selected) <= set(FEATURES):
+        raise ValueError("Feature selection must contain unique supported features")
+    x = frame.loc[:, selected].to_numpy(dtype=float)
     y = frame[TARGET].astype(str).str.upper().eq("UP").to_numpy(dtype=int)
     return x, y
