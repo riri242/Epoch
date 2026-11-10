@@ -39,4 +39,6 @@ def test_structured_report_uses_measured_values(tmp_path):
     assert str(primary[0]["evaluated_rows"]) in report
     assert f"{primary[0]['strategies']['online']['accuracy']:.3f}" in report
     assert "without day" in report
-    assert "128" not in report.split("### 3.3 Batch-size sensitivity")[1].split("## 4. Discussion")[0]
+    assert "| 50 |" in report
+    assert "| 100 |" in report
+    assert "| 200 |" in report
