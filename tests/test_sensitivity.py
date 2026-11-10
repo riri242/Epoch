@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from epoch_research.data import FEATURES, FEATURES_NO_DAY, features_target
+from epoch_research.data import FEATURES, FEATURES_WITH_DAY, features_target
 from epoch_research.experiment import Settings, run
 from epoch_research.sensitivity import compare_day_feature, save_day_sensitivity
 from test_data import example
@@ -17,8 +17,8 @@ class NoDrift:
 
 def test_no_day_feature_selection():
     frame = example(120)
-    reduced, labels = features_target(frame, FEATURES_NO_DAY)
-    full, original_labels = features_target(frame)
+    reduced, labels = features_target(frame)
+    full, original_labels = features_target(frame, FEATURES_WITH_DAY)
     assert reduced.shape == (120, 4)
     assert full.shape == (120, 5)
     assert (reduced == full[:, 1:]).all()
@@ -43,13 +43,13 @@ def test_paired_sensitivity_uses_identical_evaluation_records(tmp_path):
     )
 
     assert comparison["evaluated_rows"] == baseline["evaluated_rows"] == 840
-    assert comparison["with_day_features"] == list(FEATURES)
-    assert comparison["without_day_features"] == list(FEATURES_NO_DAY)
+    assert comparison["with_day_features"] == list(FEATURES_WITH_DAY)
+    assert comparison["without_day_features"] == list(FEATURES)
     assert "day" not in shifts["feature"].unique()
     keys = ["strategy", "block", "start_row", "end_row", "count"]
     assert windows[keys].equals(base_windows[keys])
     for name, record in comparison["comparison"].items():
-        assert record["with_day"]["accuracy"] == baseline["strategies"][name]["accuracy"]
+        assert record["without_day"]["accuracy"] == baseline["strategies"][name]["accuracy"]
         assert record["delta_percentage_points"]["accuracy"] == pytest.approx(
             100 * (record["without_day"]["accuracy"] - record["with_day"]["accuracy"])
         )
