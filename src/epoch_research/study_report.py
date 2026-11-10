@@ -48,16 +48,11 @@ def write_research_report(primary, day_check, batch_check, batch_rows, audit, ou
     best = max(metrics, key=lambda name: metrics[name]["accuracy"])
     difference = 100 * (metrics[best]["accuracy"] - metrics["static"]["accuracy"])
     best_f1 = max(metrics, key=lambda name: metrics[name]["f1_up"])
-    robust_winners = [
-        max(
-            {row["strategy"]: row["accuracy"] for row in batch_rows.loc[batch_rows["batch_size"].eq(size)].to_dict("records")},
-            key=lambda name: metrics[name]["accuracy"] if False else float(
-                batch_rows.loc[(batch_rows["batch_size"].eq(size)) &
-                               (batch_rows["strategy"].eq(name)), "accuracy"].iloc[0]
-            ),
-        )
-        for size in batch_check["batch_sizes"]
-    ]
+    robust_winners = []
+    for size in batch_check["batch_sizes"]:
+        subset = batch_rows.loc[batch_rows["batch_size"].eq(size)]
+        accuracies = dict(zip(subset["strategy"], subset["accuracy"]))
+        robust_winners.append(max(accuracies, key=accuracies.get))
     if len(set(robust_winners)) == 1:
         batch_interpretation = f"{robust_winners[0].title()} was highest in accuracy at every pre-specified batch size."
     else:
