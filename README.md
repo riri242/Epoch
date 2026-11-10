@@ -1,104 +1,105 @@
 # Epoch
 
-**An experimental study of temporal data shift and model adaptation.**
+**A Study of Temporal Data Shift and Model Adaptation**
 
-How much does a machine learning model's performance change as new data
-arrives, and can lightweight updates help? Epoch compares four training
-policies on the historical Electricity benchmark.
+Epoch is a small, reproducible machine-learning research study. It compares
+four adaptation policies on the [Electricity stream (OpenML 151)](https://www.openml.org/d/151)
+using an ordered, test-before-train evaluation. Its aim is to understand
+**when updating a classifier helps, and when it does not**.
 
-## Research question
+## Research design
 
-**Can periodic retraining, mini-batch online learning, or error-based drift
-adaptation outperform a model that is never updated?**
+**Primary experiment:** one four-feature dataset configuration, with
+`period`, `nswdemand`, `vicdemand`, and `transfer`. The potentially
+unreliable `day` and `date` fields and target-related current electricity
+prices are excluded. The raw source order is preserved.
 
-The methods share one model architecture, the same initial data and the same
-held-forward evaluation sequence. This is an exploratory benchmark, not a new
-learning algorithm or a production forecasting system.
+| Policy | Training rule |
+|---|---|
+| Static | Initial fit only; never update |
+| Periodic | Retrain on recent labeled observations at scheduled intervals |
+| Online | Incrementally update on each completed test batch |
+| ADWIN | Retrain when changes in recent prediction errors trigger an alert |
 
-## Methods
+The same model family, earliest 30% training records and later evaluation
+records are used throughout. Metrics are accuracy, balanced accuracy, and
+F1 for `UP`; PSI describes feature distribution changes.
 
-- **Static:** train once and keep the model unchanged.
-- **Periodic:** refit on recent labeled data at a fixed interval.
-- **Online:** update incrementally after each evaluated batch.
-- **ADWIN:** monitor errors and retrain after drift alerts.
+Two **supplementary checks** (not competing primary experiments):
+1. Reintroduce `day` to measure sensitivity to the questionable calendar field.
+2. Vary the batch size (128/256/512) while approximately keeping scheduled
+   update and cooldown intervals fixed in observed records. Different batch
+   sizes also change label-feedback timing.
 
-The experiment also reports Population Stability Index for the input features.
+See [methodology](docs/methodology.md), [data-quality audit](docs/data_quality.md)
+and the [day-feature check](docs/day_sensitivity_results.md).
 
-## Dataset
+## Reproduce on Windows PowerShell
 
-[Electricity (OpenML ID 151)](https://www.openml.org/d/151): 45,312 ordered
-observations with `UP`/`DOWN` labels. The original row sequence is preserved. The normalized `date` field contains known inconsistencies; decreases are reported but never used to reorder observations.
-We exclude current electricity price measurements (`nswprice`, `vicprice`)
-from the feature set to reduce target-related information leakage. Data is
-retrieved directly from OpenML at runtime and is intentionally not committed.
-
-## Setup
-
-Python 3.10 or later. From the repository root:
+Python 3.10+ is required. From the project root:
 
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
+python -m pytest -q
+python scripts/run_all.py
 ```
 
-Download, test, and run:
+The final command downloads the source dataset if missing, validates it,
+audits known irregularities, performs the primary study and robustness checks,
+and saves all results. A network connection is needed to download the
+benchmark initially.
+
+For a previously set-up clone:
 
 ```powershell
-python scripts/download_data.py
+git pull --ff-only origin main
+python -m pip install -e ".[dev]"
 python -m pytest -q
-python scripts/run_experiment.py
-python scripts/audit_data.py
-python scripts/run_sensitivity.py
+python scripts/run_all.py
 ```
 
-A working internet connection is required only for the initial OpenML download.
+## Outputs
 
-## Results
+All generated files are in `results/` (excluded from source control).
 
-Running the experiment creates these files under `results/`:
-
-| File | Contents |
+| File | Purpose |
 |---|---|
-| `metrics.json` | Aggregated metrics and update counts |
-| `window_metrics.csv` | Scores in successive future-data batches |
-| `feature_shift.csv` | PSI for each feature and batch |
-| `performance.png` | Accuracy progression by strategy |
-| `feature_shift.png` | Feature-shift trends |
-| `research_summary.md` | Research question, measured results and limitations |
-| `day_sensitivity.json` | Paired metrics with and without the `day` feature |
-| `day_sensitivity.md` | Research interpretation of the day-feature ablation |
-| `day_sensitivity_windows.csv` | Evaluation trajectory without `day` |
-| `day_sensitivity_feature_shift.csv` | Feature PSI without `day` |
+| `research_report.md` | **Main paper-style report generated from measured data** |
+| `metrics.json`, `window_metrics.csv` | Primary no-day metrics and time-block performance |
+| `performance.png`, `feature_shift.png` | Primary experiment figures |
+| `feature_shift.csv` | Feature PSI over the stream |
+| `data_audit.json` | Source date anomalies and suspected partial duplicate |
+| `day_sensitivity.md`, `day_sensitivity.json` | With-day versus no-day accuracy and other metric differences |
+| `batch_robustness.md`, `batch_robustness.csv` | Performance with batch sizes 128, 256 and 512 |
+| `research_summary.md` | Short primary-experiment summary |
 
-Generated outputs are local by default. The independent data audit writes
-`results/data_audit.json` and reports date reversals and suspected duplicate-day
-column matches without changing the input records. See [data quality notes](docs/data_quality.md).
-The no-day experiment changes only the input feature set, not the record order,
-train/evaluation split, update schedule or model type. GitHub Actions runs both
-experiments on every push to `main` and uploads the results as artifacts.
-No accuracy claim is made until the experiment is run on the original benchmark.
+GitHub Actions runs `python scripts/run_all.py` after tests and stores the
+complete `results/` directory as the **epoch-results** workflow artifact.
+[See workflow runs](https://github.com/riri242/Epoch/actions).
 
-## Repository layout
+## Code organization
 
 ```text
 Epoch/
-├── src/epoch_research/
-│   ├── audit.py          # Non-destructive source data quality checks
-│   ├── data.py           # Load and validate the ordered dataset
-│   ├── drift.py          # Feature-shift measurement
-│   ├── experiment.py     # Four adaptation strategies
-│   └── report.py         # Results and figures
-├── scripts/
-│   ├── audit_data.py
-│   ├── download_data.py
+├── src/epoch_research/  # Source: model, evaluation, drift, audit, reports
+├── scripts/             # Small command-line entrypoints
+│   ├── run_all.py       # Recommended: complete study
 │   ├── run_experiment.py
-│   └── run_sensitivity.py
-├── tests/                # Offline regression tests
-├── docs/methodology.md   # Experiment design and limitations
-├── results/              # Generated locally
-├── pyproject.toml
-└── README.md
+│   ├── run_sensitivity.py
+│   ├── audit_data.py
+│   └── download_data.py
+├── tests/               # Automated regression tests
+├── docs/                # Methodology, data-quality notes, observed findings
+├── results/             # Generated locally and in GitHub Actions
+└── pyproject.toml
 ```
 
-For full evaluation assumptions, read [methodology.md](docs/methodology.md).
+## Interpretation
+
+This is an **exploratory, single-dataset benchmark**, not a novel model,
+a production forecasting service, or proof of generalized superiority.
+The source calendar is imperfect, source row order is not independently
+verified against wall-clock time, and labels are assumed available after
+each scored batch. See the generated report for full limitations.
