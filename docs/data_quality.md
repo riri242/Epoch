@@ -30,7 +30,7 @@ The audit ran against the downloaded OpenML dataset (45,312 records) and found:
 
 Reproduce the findings using `python scripts/audit_data.py` or the GitHub Actions **Epoch experiment** workflow. The workflow stores `results/data_audit.json` alongside model reports as an artifact.
 
-**Research follow-up:** run a sensitivity experiment without `day`, investigate source metadata further, and report any differences in the model comparison. Do not claim that the dataset has been fully cleaned or that the stream order is independently calendar-verified. The five backward jumps are recorded as source data-quality caveats, not interpreted as genuine distribution drift.
+**Sensitivity check:** run `python scripts/run_sensitivity.py` (also included in the GitHub Actions experiment workflow). This compares all four strategies with and without `day` under the same stream split and update settings, writing the paired scores to `results/day_sensitivity.md` and `results/day_sensitivity.json`. Investigate source metadata further and avoid claiming the original calendar timestamps have been corrected. Do not claim that the dataset has been fully cleaned or that the stream order is independently calendar-verified. The five backward jumps are recorded as source data-quality caveats, not interpreted as genuine distribution drift.
 
 References:
 - [OpenML Electricity dataset](https://www.openml.org/d/151)
