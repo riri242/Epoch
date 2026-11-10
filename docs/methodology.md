@@ -8,7 +8,11 @@ improves its performance under temporal distribution changes.
 ## Data
 
 The Electricity benchmark (OpenML data ID 151) is treated as an ordered stream.
-The original row sequence is retained. The task is to classify `UP` versus
+The original row sequence is retained. See [data quality notes](data_quality.md)
+for the known date reversals and a suspected repeated day. The independent
+`python scripts/audit_data.py` diagnostic compares the two candidate days
+across every column and does not delete or reorder data.
+The task is to classify `UP` versus
 `DOWN`; the target is based on price movement relative to a moving average.
 `nswprice` and `vicprice` are excluded because price measurements can be
 closely related to the label itself. Features used: `day`, `period`,
@@ -43,6 +47,7 @@ updates, total model fitting time and feature PSI.
 ## Threats to validity
 
 - The normalized `date` field contains backward jumps, so row order rather than that field is the temporal index.
+- A reported repeated NSW demand day near row 17376 and potentially shifted `day` labels require a sensitivity analysis; no row deletions or calendar corrections are applied by default.
 - Benchmark literature has pointed out inconsistencies in calendar coverage and
   potentially misleading time information. Results are indexed by record order.
 - The availability of the contemporaneous features may vary in deployment;
