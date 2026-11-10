@@ -49,6 +49,7 @@ python scripts/download_data.py
 python -m pytest -q
 python scripts/run_experiment.py
 python scripts/audit_data.py
+python scripts/run_sensitivity.py
 ```
 
 A working internet connection is required only for the initial OpenML download.
@@ -65,10 +66,17 @@ Running the experiment creates these files under `results/`:
 | `performance.png` | Accuracy progression by strategy |
 | `feature_shift.png` | Feature-shift trends |
 | `research_summary.md` | Research question, measured results and limitations |
+| `day_sensitivity.json` | Paired metrics with and without the `day` feature |
+| `day_sensitivity.md` | Research interpretation of the day-feature ablation |
+| `day_sensitivity_windows.csv` | Evaluation trajectory without `day` |
+| `day_sensitivity_feature_shift.csv` | Feature PSI without `day` |
 
 Generated outputs are local by default. The independent data audit writes
 `results/data_audit.json` and reports date reversals and suspected duplicate-day
 column matches without changing the input records. See [data quality notes](docs/data_quality.md).
+The no-day experiment changes only the input feature set, not the record order,
+train/evaluation split, update schedule or model type. GitHub Actions runs both
+experiments on every push to `main` and uploads the results as artifacts.
 No accuracy claim is made until the experiment is run on the original benchmark.
 
 ## Repository layout
@@ -84,7 +92,8 @@ Epoch/
 ├── scripts/
 │   ├── audit_data.py
 │   ├── download_data.py
-│   └── run_experiment.py
+│   ├── run_experiment.py
+│   └── run_sensitivity.py
 ├── tests/                # Offline regression tests
 ├── docs/methodology.md   # Experiment design and limitations
 ├── results/              # Generated locally
