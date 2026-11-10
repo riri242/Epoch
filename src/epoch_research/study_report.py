@@ -120,7 +120,7 @@ def write_research_report(primary, day_check, batch_check, batch_rows, audit, ou
         "",
         "### 3.3 Batch-size sensitivity",
         "",
-        "The study tests 128, 256 and 512 observations per batch. Periodic",
+        f"The study tests {', '.join(map(str, batch_check['batch_sizes']))} observations per batch. Periodic",
         "retraining and ADWIN cooldown intervals are kept approximately fixed",
         "in numbers of observations.",
         "",
