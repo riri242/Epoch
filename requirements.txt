@@ -1,0 +1,4 @@
+# Runtime packages for hosting the read-only dashboard on Streamlit Community Cloud.
+# Model-training dependencies are not needed when viewing published results.
+streamlit>=1.40,<2
+pandas>=2.1,<3
