@@ -61,6 +61,38 @@ python -m pytest -q
 python scripts/run_all.py
 ```
 
+## Optional Streamlit research dashboard
+
+The dashboard is a **read-only presentation layer**, not an additional
+classifier, real-time predictor, or a replacement for the scientific report.
+It shows the published study immediately and unlocks interactive per-block
+performance and feature-shift charts when local result files are present.
+
+Install and launch from the project root:
+
+```powershell
+python -m pip install -e ".[dev,dashboard]"
+python scripts/run_all.py
+python -m streamlit run streamlit_app.py
+```
+
+The last command opens a local browser dashboard, usually at
+`http://localhost:8501`. You can explore:
+
+- **Overview:** compare accuracy, balanced accuracy and F1 across strategies.
+- **Performance over time:** select update policies and smoothing window.
+- **Data shift:** plot PSI across ordered evaluation blocks.
+- **Robustness checks:** compare `day` inclusion and feedback batch sizes.
+- **Research report:** read and export the scientific report.
+
+**Publishing online:** The Streamlit Community Cloud deploy form can use
+the public GitHub repository `riri242/Epoch` on branch `main` and
+entrypoint `streamlit_app.py`. The dashboard works without committed
+generated data because it uses the reviewed `docs/research_report.md`
+as a fallback. Per-block charts require local generated CSV files and
+are not present on a fresh cloud deployment. The `data/` and
+`results/` folders remain excluded from Git history.
+
 ## Outputs
 
 All generated files are in `results/` (excluded from source control).
