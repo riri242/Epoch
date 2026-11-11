@@ -63,6 +63,8 @@ python scripts/run_all.py
 
 ## Optional Streamlit research dashboard
 
+**Live Dashboard:** [Explore Epoch on Streamlit](https://epochx.streamlit.app/)
+
 The dashboard is a **read-only presentation layer**, not an additional
 classifier, real-time predictor, or a replacement for the scientific report.
 It shows the published study immediately and unlocks interactive per-block
